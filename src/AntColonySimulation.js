@@ -11,6 +11,9 @@ const AntColonySimulation = () => {
   const [bestPathLength, setBestPathLength] = useState(Infinity);
   const [shortestPathFound, setShortestPathFound] = useState(false);
   const [speed, setSpeed] = useState(50);
+  const [alpha, setAlpha] = useState(1); // Feromon önem katsayısı
+  const [beta, setBeta] = useState(2); // Mesafe önem katsayısı
+  const [pheromoneDeposit, setPheromoneDeposit] = useState(100); // Bırakılan feromon miktarı
 
   const gridSize = 40;
   const cols = 20;
@@ -103,7 +106,7 @@ const AntColonySimulation = () => {
       return neighbors[neighbors.length - 1];
     }
 
-    move(grid, target) {
+    move(grid, target, alpha, beta) {
       if (this.completed || this.stuck) return;
 
       if (this.x === target.x && this.y === target.y) {
@@ -113,7 +116,7 @@ const AntColonySimulation = () => {
       }
 
       const neighbors = this.getNeighbors(grid);
-      const next = this.selectNext(neighbors, target);
+      const next = this.selectNext(neighbors, target, alpha, beta);
 
       if (next) {
         this.x = next.x;
@@ -123,9 +126,9 @@ const AntColonySimulation = () => {
       }
     }
 
-    depositPheromone(grid, amount = 1) {
+    depositPheromone(grid, pheromoneAmount) {
       if (this.completed) {
-        const quality = 100 / this.pathLength;
+        const quality = pheromoneAmount / this.pathLength;
         for (let pos of this.path) {
           if (grid[pos.y] && grid[pos.y][pos.x]) {
             grid[pos.y][pos.x].pheromone += quality;
@@ -346,7 +349,7 @@ const AntColonySimulation = () => {
       let allDone = true;
       for (let ant of ants) {
         if (!ant.completed && !ant.stuck) {
-          ant.move(pheromones, target);
+          ant.move(pheromones, target, alpha, beta);
           allDone = false;
         }
       }
@@ -370,7 +373,7 @@ const AntColonySimulation = () => {
         }
 
         for (let ant of ants) {
-          ant.depositPheromone(pheromones);
+          ant.depositPheromone(pheromones, pheromoneDeposit);
         }
 
         // Buharlaştır
@@ -386,7 +389,17 @@ const AntColonySimulation = () => {
 
     const interval = setInterval(animate, speed);
     return () => clearInterval(interval);
-  }, [isRunning, antCount, obstacleCount, evaporationRate, speed]);
+  }, [
+    isRunning,
+    antCount,
+    obstacleCount,
+    evaporationRate,
+    speed,
+    alpha,
+    beta,
+    bestPathLength,
+    pheromoneDeposit,
+  ]);
 
   // İlk çizim
   useEffect(() => {
@@ -441,7 +454,7 @@ const AntColonySimulation = () => {
           </div>
 
           <div>
-            <label className="text-white text-sm block mb-2 flex items-center gap-2">
+            <label className="text-white text-sm mb-2 flex items-center gap-2">
               <Droplets size={16} />
               Buharlaşma: {(evaporationRate * 100).toFixed(0)}%
             </label>
@@ -479,6 +492,68 @@ const AntColonySimulation = () => {
               onChange={(e) => setSpeed(parseInt(e.target.value))}
               className="w-full"
             />
+          </div>
+        </div>
+
+        {/* YENİ: Feromon ve Olasılık Parametreleri */}
+        <div className="mb-4 bg-purple-900/20 rounded-lg p-4 border border-purple-500/30">
+          <h3 className="text-purple-300 font-bold mb-3 flex items-center gap-2">
+            🧪 Feromon ve Olasılık Parametreleri
+          </h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="text-white text-sm mb-2 block">
+                Alpha (α) - Feromon Etkisi: {alpha.toFixed(1)}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="5"
+                step="0.1"
+                value={alpha}
+                onChange={(e) => setAlpha(parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Feromonun yol seçimindeki ağırlığı
+              </p>
+            </div>
+
+            <div>
+              <label className="text-white text-sm mb-2 block">
+                Beta (β) - Mesafe Etkisi: {beta.toFixed(1)}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="5"
+                step="0.1"
+                value={beta}
+                onChange={(e) => setBeta(parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Hedefe yakınlığın yol seçimindeki ağırlığı
+              </p>
+            </div>
+
+            <div>
+              <label className="text-white text-sm mb-2 block">
+                Feromon Miktarı: {pheromoneDeposit}
+              </label>
+              <input
+                type="range"
+                min="10"
+                max="500"
+                step="10"
+                value={pheromoneDeposit}
+                onChange={(e) => setPheromoneDeposit(parseInt(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Karıncaların bıraktığı feromon miktarı
+              </p>
+            </div>
           </div>
         </div>
 
@@ -536,7 +611,7 @@ const AntColonySimulation = () => {
 
         <div className="bg-slate-700 rounded-lg p-4">
           <h3 className="text-white font-semibold mb-2">Nasıl Çalışır?</h3>
-          <ul className="text-slate-300 text-sm space-y-1">
+          <ul className="text-slate-300 text-sm space-y-1 mb-4">
             <li>
               🐜 Karıncalar 🏠 evden 🍯 yiyeceğe gitmek için rastgele yollar
               dener
@@ -550,6 +625,37 @@ const AntColonySimulation = () => {
             <li>🔄 Diğer karıncalar feromon yoğunluğuna göre yol seçer</li>
             <li>✅ Zamanla koloni en kısa yolu keşfeder!</li>
           </ul>
+
+          <div className="bg-slate-800/50 rounded p-3 mb-3">
+            <h4 className="text-purple-300 font-semibold text-sm mb-2">
+              🧮 Olasılık Hesaplama Formülü:
+            </h4>
+            <div className="text-xs text-gray-300 space-y-1">
+              <p className="font-mono bg-slate-900 p-2 rounded">
+                P(komşu) = [τ<sup>α</sup>] × [η<sup>β</sup>]
+              </p>
+              <p>
+                • <span className="text-purple-400">τ (tau)</span>: Feromon
+                yoğunluğu
+              </p>
+              <p>
+                • <span className="text-cyan-400">η (eta)</span>: Hedefe
+                yakınlık (1/mesafe)
+              </p>
+              <p>
+                • <span className="text-yellow-400">α (alpha)</span>: Feromon
+                etkisi ({alpha.toFixed(1)})
+              </p>
+              <p>
+                • <span className="text-green-400">β (beta)</span>: Mesafe
+                etkisi ({beta.toFixed(1)})
+              </p>
+              <p className="mt-2 text-gray-400">
+                Alpha yüksek → Feromon daha etkili | Beta yüksek → Mesafe daha
+                etkili
+              </p>
+            </div>
+          </div>
 
           <div className="mt-3 flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
