@@ -5,7 +5,31 @@ Bu proje, iki popülasyon tabanlı optimizasyon yaklaşımını etkileşimli ola
 - 🐜 Karınca Kolonisi Optimizasyonu (Ant Colony Optimization, ACO)
 - 🧬 Gen Aktarımı Algoritması (Genetik Algoritma)
 
-Arayüz Türkçe’dir ve parametreleri canlı olarak değiştirip sonuçları anlık görebilirsiniz.
+Arayüz Türkçe'dir ve parametreleri canlı olarak değiştirip sonuçları anlık görebilirsiniz.
+
+## 📸 Ekran Görüntüleri
+
+### Ana Sayfa
+
+![Ana Sayfa](./images/AnaSayfa.png)
+_İki algoritma arasından seçim yapabileceğiniz ana menü_
+
+### Karınca Kolonisi Optimizasyonu (ACO)
+
+![ACO Simülasyonu](./images/AcoEkranı.png)
+_Karıncaların feromon izleri ile en kısa yolu bulması_
+
+### Gen Aktarımı Algoritması
+
+![Genetik Algoritma](./images/GenAktarma.png)
+_Genetik operatörlerle evrimsel optimizasyon süreci_
+
+### Parametre Ayarları
+
+![Parametre Paneli](./images/GenAna.png)
+_Gerçek zamanlı parametre ayarlama paneli_
+
+---
 
 ## 🚀 Hocaya Hızlı Başlangıç (Windows/PowerShell)
 
